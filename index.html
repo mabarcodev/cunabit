@@ -1,0 +1,1116 @@
+<!DOCTYPE html><html lang="es"><head>
+
+
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f7f3ec">
+<title>Cunabit · Monitor de bebé</title>
+<style>
+  /* System-font stack — no network calls, instant paint */
+  :root {
+    --bg: #f7f3ec;
+    --bg-tint: #efe9df;
+    --card: #ffffff;
+    --ink: #1b1a17;
+    --ink-2: #5a564e;
+    --ink-3: #8d8878;
+    --line: #e8e1d3;
+    --line-2: #ddd4c1;
+    --accent: oklch(62% 0.14 300);       /* soft lavender */
+    --accent-ink: oklch(38% 0.10 300);
+    --accent-wash: oklch(95% 0.03 300);
+    --ok: oklch(65% 0.14 160);
+    --warn: oklch(65% 0.18 30);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 1px 0 rgba(27,26,23,0.04), 0 8px 24px -12px rgba(27,26,23,0.08);
+    font-synthesis: none;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior: none;
+  }
+  body {
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  .screen { display: none; padding: 24px 20px 32px; max-width: 480px; margin: 0 auto; min-height: 100dvh; }
+  .screen.active { display: block; }
+
+  /* ===== HOME ===== */
+  .hero {
+    text-align: center;
+    padding: 48px 8px 32px;
+  }
+  .mark {
+    width: 56px; height: 56px; margin: 0 auto 20px;
+    border-radius: 50%;
+    background: var(--accent-wash);
+    display: grid; place-items: center;
+    color: var(--accent-ink);
+  }
+  .mark svg { width: 26px; height: 26px; }
+  .wordmark {
+    font-family: ui-serif, "Iowan Old Style", "Apple Garamond", Baskerville, "Times New Roman", serif;
+    font-size: 44px;
+    font-weight: 400;
+    font-style: italic;
+    letter-spacing: -0.015em;
+    line-height: 1;
+    color: var(--ink);
+    background: linear-gradient(180deg, var(--ink) 0%, var(--accent-ink) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .wordmark span {
+    font-weight: 400;
+  }
+  .tagline {
+    color: var(--ink-2);
+    font-size: 14px;
+    margin-top: 10px;
+  }
+  .meta {
+    color: var(--ink-3);
+    font-size: 11px;
+    margin-top: 6px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .roles { display: grid; gap: 10px; margin-top: 28px; }
+  .role {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    text-align: left;
+    color: var(--ink);
+    font: inherit;
+    width: 100%;
+    cursor: pointer;
+    transition: border-color .15s, transform .1s;
+  }
+  .role:hover { border-color: var(--line-2); }
+  .role:active { transform: scale(0.99); }
+  .role-icon {
+    width: 40px; height: 40px; flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--bg-tint);
+    display: grid; place-items: center;
+    color: var(--ink);
+  }
+  .role-icon svg { width: 20px; height: 20px; }
+  .role-text { flex: 1; min-width: 0; }
+  .role-text h3 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 2px; }
+  .role-text p { color: var(--ink-2); font-size: 13px; line-height: 1.4; }
+  .role-chev { color: var(--ink-3); flex-shrink: 0; }
+  .role-chev svg { width: 16px; height: 16px; }
+
+  .safe-row { display: flex; justify-content: center; margin-top: 20px; }
+  .safe-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent-wash);
+    color: var(--accent-ink);
+    border: 1px solid transparent;
+    padding: 10px 16px;
+    border-radius: 100px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color .15s, transform .1s;
+  }
+  .safe-btn:hover { border-color: var(--accent); }
+  .safe-btn:active { transform: scale(0.98); }
+  .safe-btn svg { width: 14px; height: 14px; }
+
+  .safe-modal h2 { font-family: ui-serif, "Iowan Old Style", Baskerville, serif; font-style: italic; font-weight: 400; font-size: 24px; letter-spacing: -0.01em; }
+  .safe-modal .sig { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12px; text-align: center; letter-spacing: 0.02em; }
+
+  .signature {
+    text-align: center;
+    margin-top: 14px;
+    color: var(--accent-ink);
+    font-family: ui-serif, "Iowan Old Style", Baskerville, serif;
+    font-style: italic;
+    font-size: 15px;
+    letter-spacing: 0.01em;
+  }
+  .signature strong {
+    font-weight: 500;
+    font-style: normal;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    letter-spacing: 0.02em;
+  }
+
+  .foot {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    margin-top: 20px;
+    color: var(--ink-3);
+    font-size: 12px;
+  }
+  .foot svg { width: 12px; height: 12px; }
+  .foot button {
+    background: none; border: 0; padding: 0;
+    color: var(--ink-2);
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--line-2);
+    cursor: pointer;
+  }
+
+  /* ===== HEADERS ===== */
+  .header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-top: 4px; }
+  .back {
+    width: 36px; height: 36px; flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .back svg { width: 16px; height: 16px; }
+  .header h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; }
+
+  /* ===== CARDS / STEPS ===== */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+  .card h3 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 4px; }
+  .card p { color: var(--ink-2); font-size: 13px; line-height: 1.5; margin-bottom: 12px; }
+  .step-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .step-num {
+    width: 22px; height: 22px; flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--accent-wash);
+    color: var(--accent-ink);
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 600;
+  }
+
+  /* ===== NOTICE ===== */
+  .notice {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+  .notice svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; color: var(--accent-ink); }
+  .notice strong { color: var(--ink); font-weight: 600; }
+
+  /* ===== INPUTS ===== */
+  input[type=text] {
+    width: 100%;
+    background: var(--bg-tint);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    color: var(--ink);
+    font: inherit;
+    font-size: 20px;
+    text-align: center;
+    letter-spacing: 0.18em;
+    font-variant-numeric: tabular-nums;
+    transition: border-color .15s, background .15s;
+  }
+  input[type=text]:focus {
+    outline: none;
+    background: #fff;
+    border-color: var(--accent);
+  }
+  input.code-input { text-transform: uppercase; font-weight: 600; letter-spacing: 0.15em; }
+
+  /* ===== BIG CODE DISPLAY ===== */
+  .code-display {
+    text-align: center;
+    padding: 22px 16px;
+    background: var(--accent-wash);
+    border: 1px dashed var(--accent);
+    border-radius: var(--radius);
+    margin: 4px 0 14px;
+  }
+  .code-display .code {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--accent-ink);
+    letter-spacing: 0.1em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .code-display .code-hint {
+    color: var(--ink-3);
+    font-size: 11px;
+    margin-top: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ===== STATUS ===== */
+  .status {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-tint);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .spinner {
+    width: 12px; height: 12px; flex-shrink: 0;
+    border: 2px solid var(--line-2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status.success { color: var(--ok); }
+  .status.error { color: var(--warn); }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--ink);
+    color: #fff;
+    border: 0;
+    padding: 14px 20px;
+    border-radius: var(--radius-sm);
+    font: inherit;
+    font-weight: 600;
+    font-size: 15px;
+    width: 100%;
+    cursor: pointer;
+    transition: transform .1s, background .15s, opacity .15s;
+  }
+  .btn:active { transform: scale(0.99); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn.accent { background: var(--accent); color: #fff; }
+  .btn.ghost { background: var(--card); color: var(--ink); border: 1px solid var(--line); }
+  .btn svg { width: 16px; height: 16px; }
+
+  /* ===== CAMERA LIVE ===== */
+  #cam-screen, #mon-screen { padding: 0; background: #000; position: relative; height: 100dvh; }
+  #local-video { width: 100%; height: 100%; object-fit: cover; }
+  .cam-overlay {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: calc(env(safe-area-inset-top) + 14px) 18px 18px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.55), transparent);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    padding: 7px 13px; border-radius: 100px;
+    font-size: 12px; font-weight: 500; color: #fff;
+    letter-spacing: 0.01em;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #888; }
+  .dot.live { background: var(--ok); box-shadow: 0 0 8px var(--ok); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .close-btn {
+    width: 34px; height: 34px;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 0; border-radius: 50%;
+    color: #fff;
+    display: grid; place-items: center;
+    cursor: pointer;
+  }
+  .close-btn svg { width: 14px; height: 14px; }
+
+  .cam-bottom {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 16px 20px calc(env(safe-area-inset-bottom) + 20px);
+    background: linear-gradient(0deg, rgba(0,0,0,0.55), transparent);
+    text-align: center;
+    color: rgba(255,255,255,0.75);
+    font-size: 12px;
+  }
+
+  /* ===== MONITOR LIVE ===== */
+  #remote-video { width: 100%; height: 100%; object-fit: cover; background: #000; }
+  .mon-top {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: calc(env(safe-area-inset-top) + 14px) 18px 18px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.55), transparent);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .mon-bottom {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 18px 20px calc(env(safe-area-inset-bottom) + 20px);
+    background: linear-gradient(0deg, rgba(0,0,0,0.75), transparent);
+  }
+  .meter { height: 5px; background: rgba(255,255,255,0.15); border-radius: 100px; overflow: hidden; margin-bottom: 10px; }
+  .meter-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--ok), var(--accent), var(--warn));
+    width: 0%; transition: width .08s linear;
+  }
+  .meter-row {
+    display: flex; justify-content: space-between;
+    color: rgba(255,255,255,0.7); font-size: 11px;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .thr-row { display: flex; align-items: center; gap: 12px; color: #fff; font-size: 12px; }
+  .thr-row input[type=range] { flex: 1; accent-color: var(--accent); }
+  .thr-label { opacity: 0.7; }
+
+  .alert {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--warn); color: #fff;
+    padding: 18px 28px; border-radius: 14px;
+    font-size: 18px; font-weight: 600;
+    letter-spacing: -0.01em;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    display: none;
+  }
+  .alert.show { display: block; animation: shake .4s; }
+  @keyframes shake {
+    0%,100% { transform: translate(-50%,-50%); }
+    25% { transform: translate(-52%,-50%); }
+    75% { transform: translate(-48%,-50%); }
+  }
+
+  /* ===== HELP MODAL ===== */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(27,26,23,0.5);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    z-index: 100; padding: 20px; overflow-y: auto;
+  }
+  .modal-overlay.show { display: block; }
+  .modal {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+    max-width: 440px; margin: 40px auto;
+    box-shadow: var(--shadow);
+  }
+  .modal h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; margin-bottom: 14px; }
+  .modal h3 { font-size: 13px; font-weight: 600; color: var(--accent-ink); margin-top: 18px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .modal p, .modal li { color: var(--ink-2); font-size: 14px; line-height: 1.55; margin-bottom: 6px; }
+  .modal ul { padding-left: 18px; }
+  .modal strong { color: var(--ink); font-weight: 600; }
+  .safe-modal h2 { font-family: ui-serif, "Iowan Old Style", Baskerville, serif; font-style: italic; font-weight: 400; font-size: 24px; letter-spacing: -0.01em; }
+  .safe-modal .sig { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--accent-ink); font-family: ui-serif, "Iowan Old Style", Baskerville, serif; font-style: italic; font-size: 13px; text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body style="cursor: crosshair; font-size: 16px;" data-cc-id="cc-1">
+
+<!-- HOME -->
+<div id="home-screen" class="screen active" data-cc-id="cc-2">
+  <div class="hero" data-cc-id="cc-3">
+    <div class="mark" aria-hidden="true">
+      <!-- moon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+    </div>
+    <div class="wordmark">cuna<span>bit</span></div>
+    <div class="tagline">Monitor de bebé · vídeo P2P en tu WiFi</div>
+    <div class="meta">v5.1</div>
+  </div>
+
+  <div class="roles">
+    <button class="role" onclick="goCamera()">
+      <span class="role-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+      </span>
+      <span class="role-text">
+        <h3>Soy la cámara</h3>
+        <p data-cc-id="cc-10">Se queda con el bebé y emite vídeo y sonido.</p>
+      </span>
+      <span class="role-chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </span>
+    </button>
+
+    <button class="role" onclick="goMonitor()" data-cc-id="cc-4">
+      <span class="role-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      </span>
+      <span class="role-text">
+        <h3>Soy el monitor</h3>
+        <p data-cc-id="cc-9">Recibe la imagen y avisa si el bebé llora.</p>
+      </span>
+      <span class="role-chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </span>
+    </button>
+  </div>
+
+  <div class="safe-row" data-cc-id="cc-5">
+    <button class="safe-btn" onclick="showSafe()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+      <span>¿Es seguro?</span>
+    </button>
+  </div>
+
+  <div class="foot">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+    <span data-cc-id="cc-6">Cifrado de extremo a extremo ·</span>
+    <button onclick="showHelp()">¿cómo funciona?</button>
+  </div>
+  <div class="signature" data-cc-id="cc-7">Con mucho amor — <strong data-cc-id="cc-8">MabarcoDev</strong> ❤️</div>
+</div>
+
+<!-- CAMERA SETUP -->
+<div id="cam-setup-screen" class="screen">
+  <div class="header">
+    <button class="back" onclick="goHome()" aria-label="Volver">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <h2>Configurar cámara</h2>
+  </div>
+
+  <div class="notice">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+    <div>Ambos móviles deben estar en la <strong>misma WiFi</strong>. Tras emparejar, el vídeo va directo de móvil a móvil.</div>
+  </div>
+
+  <div class="card">
+    <div class="step-head">
+      <span class="step-num">1</span>
+      <h3>PIN de seguridad</h3>
+    </div>
+    <p>Inventa un PIN de 6 dígitos. El monitor lo usará para descifrar la conexión.</p>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="cam-pin" placeholder="· · · · · ·">
+  </div>
+
+  <div class="card">
+    <div class="step-head">
+      <span class="step-num">2</span>
+      <h3>Iniciar emparejamiento</h3>
+    </div>
+    <p>Activa la cámara y genera el código de emparejamiento.</p>
+    <button class="btn accent" onclick="startCameraFlow()" id="start-cam-btn">Activar cámara</button>
+  </div>
+
+  <div class="card" id="cam-step-code" style="display:none;">
+    <div class="step-head">
+      <span class="step-num">3</span>
+      <h3>Código de emparejamiento</h3>
+    </div>
+    <p>Introduce este código en el móvil-monitor:</p>
+    <div class="code-display">
+      <div class="code" id="cam-code-display">————</div>
+      <div class="code-hint">válido 5 minutos</div>
+    </div>
+    <div class="status" id="cam-status">
+      <div class="spinner"></div>
+      <span id="cam-status-text">Esperando al monitor…</span>
+    </div>
+  </div>
+</div>
+
+<!-- MONITOR SETUP -->
+<div id="mon-setup-screen" class="screen">
+  <div class="header">
+    <button class="back" onclick="goHome()" aria-label="Volver">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <h2>Configurar monitor</h2>
+  </div>
+
+  <div class="notice">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+    <div>Conéctate a la <strong>misma WiFi</strong> que el móvil-cámara.</div>
+  </div>
+
+  <div class="card">
+    <div class="step-head">
+      <span class="step-num">1</span>
+      <h3>PIN de seguridad</h3>
+    </div>
+    <p>Introduce el mismo PIN de 6 dígitos que usaste en la cámara.</p>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="mon-pin" placeholder="· · · · · ·">
+  </div>
+
+  <div class="card">
+    <div class="step-head">
+      <span class="step-num">2</span>
+      <h3>Código de emparejamiento</h3>
+    </div>
+    <p>Teclea el código que muestra la cámara (4 letras + 4 números).</p>
+    <input type="text" maxlength="9" id="mon-code" class="code-input" placeholder="BABY-4821" autocapitalize="characters">
+  </div>
+
+  <div class="card">
+    <div class="step-head">
+      <span class="step-num">3</span>
+      <h3>Conectar</h3>
+    </div>
+    <button class="btn accent" onclick="startMonitorFlow()" id="start-mon-btn">Conectar con la cámara</button>
+    <div class="status" id="mon-status" style="display:none;margin-top:12px;">
+      <div class="spinner"></div>
+      <span id="mon-status-text">Conectando…</span>
+    </div>
+  </div>
+</div>
+
+<!-- CAMERA LIVE -->
+<div id="cam-screen" class="screen">
+  <video id="local-video" autoplay="" playsinline="" muted=""></video>
+  <div class="cam-overlay">
+    <div class="pill">
+      <span class="dot live"></span>
+      <span>Emitiendo</span>
+    </div>
+    <button class="close-btn" onclick="hangup()" aria-label="Terminar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+  <div class="cam-bottom">Deja el móvil con el bebé. La pantalla puede apagarse.</div>
+</div>
+
+<!-- MONITOR LIVE -->
+<div id="mon-screen" class="screen">
+  <video id="remote-video" autoplay="" playsinline=""></video>
+  <div class="mon-top">
+    <div class="pill">
+      <span class="dot live" id="mon-live-dot"></span>
+      <span id="mon-live-text">Conectado</span>
+    </div>
+    <button class="close-btn" onclick="hangup()" aria-label="Terminar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+  <div class="alert" id="alert-banner">Llanto detectado</div>
+  <div class="mon-bottom">
+    <div class="meter"><div class="meter-bar" id="level-bar"></div></div>
+    <div class="meter-row">
+      <span>Volumen</span>
+      <span id="level-value">0%</span>
+    </div>
+    <div class="thr-row">
+      <span class="thr-label">Umbral</span>
+      <input type="range" id="threshold" min="5" max="80" value="35">
+      <span id="threshold-value">35%</span>
+    </div>
+  </div>
+</div>
+
+<!-- SAFE MODAL -->
+<div class="modal-overlay" id="safe-modal">
+  <div class="modal safe-modal">
+    <h2>Hola mamá, hola papá 👋</h2>
+    <p>Sabemos que usar una app nueva para vigilar a tu bebé puede generar dudas — y es completamente normal. Por eso aquí quiero explicarte cómo funciona, sin tecnicismos.</p>
+
+    <h3>El WiFi no es lo mismo que internet</h3>
+    <p>El WiFi es como una radio privada dentro de tu casa que emite el router. Internet es lo que llega por el cable de la calle. Cunabit usa solo esa radio privada — si desconectaras el cable de fibra, el vídeo del bebé seguiría funcionando entre los dos móviles.</p>
+
+    <h3>¿Qué pasa con mis datos?</h3>
+    <p>Nada sale de tu casa. El único momento en que Cunabit toca internet son 3 segundos al principio, para que los dos móviles se "presenten" entre sí. Después, el vídeo y el audio van directos de un móvil al otro.</p>
+
+    <h3>¿Necesito crear una cuenta?</h3>
+    <p>No. Abre la página y listo. Sin descargas, sin registro, sin contraseña guardada en ningún servidor.</p>
+
+    <div class="sig">Con mucho amor — MabarcoDev ❤️<br>Dedicado a Lara y Mateo</div>
+
+    <button class="btn" style="margin-top:18px;" onclick="hideSafe()">Entendido</button>
+  </div>
+</div>
+
+<!-- HELP MODAL -->
+<div class="modal-overlay" id="help-modal">
+  <div class="modal">
+    <h2>¿Cómo funciona Cunabit?</h2>
+    <p>Cunabit usa WebRTC (la tecnología de las videollamadas modernas) para conectar dos móviles directamente a través de tu WiFi.</p>
+
+    <h3>¿Va por internet?</h3>
+    <p>Solo durante el emparejamiento (3 segundos). Un buzón temporal en Netlify intercambia datos de conexión cifrados. Después, vídeo y audio van <strong>directos móvil a móvil</strong> por tu WiFi.</p>
+
+    <h3>¿Es privado?</h3>
+    <p>Sí. El buzón solo ve texto cifrado con tu PIN (AES‑256). Sin el PIN nadie puede usarlo. Una vez emparejados, nada pasa por internet.</p>
+
+    <h3>PIN y código</h3>
+    <p>El <strong>PIN</strong> (6 dígitos) cifra la conexión. El <strong>código</strong> (ej. BABY‑4821) identifica el buzón. Ambos son necesarios.</p>
+
+    <h3>Detección de llanto</h3>
+    <p>El monitor analiza el volumen del audio. Si supera el umbral durante 1,5 segundos, vibra y muestra una alerta.</p>
+
+    <h3>Consejos</h3>
+    <ul>
+      <li>Desactiva el bloqueo automático del móvil-cámara.</li>
+      <li>Conéctalo a un cargador.</li>
+      <li>Mantén la app abierta.</li>
+      <li>Si se cae la conexión, vuelve a emparejar.</li>
+    </ul>
+
+    <button class="btn" style="margin-top:18px;" onclick="hideHelp()">Entendido</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CUNABIT v5 — WebRTC + signaling box (logic unchanged)
+// ============================================================
+
+const API_BASE = '/api/box';
+const POLL_INTERVAL_MS = 1500;
+const POLL_TIMEOUT_MS = 5 * 60 * 1000;
+
+let pc = null;
+let localStream = null;
+let role = null;
+let audioContext = null;
+let analyser = null;
+let levelRAF = null;
+let aboveThresholdSince = null;
+let alertActive = false;
+let pollAbort = false;
+let currentCode = null;
+
+// ---- Navigation ----
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goHome() { hangup(); showScreen('home-screen'); }
+function goCamera() { role = 'camera'; showScreen('cam-setup-screen'); }
+function goMonitor() { role = 'monitor'; showScreen('mon-setup-screen'); }
+function showHelp() { document.getElementById('help-modal').classList.add('show'); }
+function hideHelp() { document.getElementById('help-modal').classList.remove('show'); }
+function showSafe() { document.getElementById('safe-modal').classList.add('show'); }
+function hideSafe() { document.getElementById('safe-modal').classList.remove('show'); }
+
+// ---- Code generation (4 letters + 4 digits) ----
+const CODE_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+const CODE_DIGITS = '23456789';
+function generateCode() {
+  const rand = new Uint8Array(8);
+  crypto.getRandomValues(rand);
+  let letters = '';
+  for (let i = 0; i < 4; i++) letters += CODE_LETTERS[rand[i] % CODE_LETTERS.length];
+  let digits = '';
+  for (let i = 0; i < 4; i++) digits += CODE_DIGITS[rand[4 + i] % CODE_DIGITS.length];
+  return `${letters}-${digits}`;
+}
+function normalizeCode(input) {
+  return (input || '').toUpperCase().replace(/\s+/g, '').replace(/^([A-Z]{4})(\d{4})$/, '$1-$2');
+}
+function isValidCode(code) { return /^[A-Z]{4}-\d{4}$/.test(code); }
+
+// ---- Encryption (AES-GCM with PIN-derived key) ----
+const CRYPTO_SALT = new TextEncoder().encode('cunabit-v1-salt');
+
+async function deriveKey(pin) {
+  const baseKey = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveKey']
+  );
+  return await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: CRYPTO_SALT, iterations: 100000, hash: 'SHA-256' },
+    baseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+async function encryptWithPin(text, pin) {
+  const key = await deriveKey(pin);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv }, key, new TextEncoder().encode(text)
+  );
+  const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+  combined.set(iv, 0);
+  combined.set(new Uint8Array(ciphertext), iv.length);
+  return btoa(String.fromCharCode(...combined));
+}
+async function decryptWithPin(b64, pin) {
+  const combined = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const iv = combined.slice(0, 12);
+  const ciphertext = combined.slice(12);
+  const key = await deriveKey(pin);
+  const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+  return new TextDecoder().decode(decrypted);
+}
+function validatePin(pin) { return /^\d{6}$/.test(pin); }
+
+// ---- Signaling box client ----
+async function boxPut(code, roleKey, payload) {
+  let lastErr = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await fetch(API_BASE, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ code, role: roleKey, payload })
+      });
+      if (res.ok) return;
+      let errText = `HTTP ${res.status}`;
+      try {
+        const body = await res.json();
+        if (body && body.error) errText = `${res.status} ${body.error}` + (body.detail ? ` (${body.detail})` : '');
+      } catch {}
+      lastErr = new Error('Servidor: ' + errText);
+      if (res.status < 500) throw lastErr;
+    } catch (e) {
+      lastErr = e;
+    }
+    await new Promise(r => setTimeout(r, 800 * (attempt + 1)));
+  }
+  throw lastErr || new Error('No se pudo contactar con el servidor de emparejamiento.');
+}
+async function boxGet(code, roleKey) {
+  const res = await fetch(`${API_BASE}?code=${encodeURIComponent(code)}&role=${roleKey}`);
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    let errText = `HTTP ${res.status}`;
+    try {
+      const body = await res.json();
+      if (body && body.error) errText = `${res.status} ${body.error}`;
+    } catch {}
+    throw new Error('Servidor: ' + errText);
+  }
+  const body = await res.json();
+  return body.payload;
+}
+async function boxDelete(code) {
+  try {
+    await fetch(`${API_BASE}?code=${encodeURIComponent(code)}`, { method: 'DELETE' });
+  } catch {}
+}
+async function boxPoll(code, roleKey, onTick) {
+  const start = Date.now();
+  while (!pollAbort) {
+    if (Date.now() - start > POLL_TIMEOUT_MS) throw new Error('timeout');
+    try {
+      const result = await boxGet(code, roleKey);
+      if (result) return result;
+    } catch (e) {
+      console.warn('poll error (will retry):', e.message);
+    }
+    if (onTick) onTick(Math.floor((Date.now() - start) / 1000));
+    await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
+  }
+  throw new Error('aborted');
+}
+
+// ---- WebRTC ----
+function createPeerConnection() {
+  pc = new RTCPeerConnection({ iceServers: [] });
+  pc.oniceconnectionstatechange = () => {
+    console.log('ICE state:', pc.iceConnectionState);
+    const dot = document.getElementById('mon-live-dot');
+    const text = document.getElementById('mon-live-text');
+    if (!dot) return;
+    if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+      dot.classList.add('live');
+      text.textContent = 'Conectado';
+    } else if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
+      dot.classList.remove('live');
+      text.textContent = 'Desconectado';
+    }
+  };
+  pc.ontrack = e => {
+    const remoteVideo = document.getElementById('remote-video');
+    remoteVideo.srcObject = e.streams[0];
+    setupAudioAnalyser(e.streams[0]);
+  };
+  return pc;
+}
+function waitForIceGathering() {
+  return new Promise(resolve => {
+    if (pc.iceGatheringState === 'complete') return resolve();
+    const check = () => {
+      if (pc.iceGatheringState === 'complete') {
+        pc.removeEventListener('icegatheringstatechange', check);
+        resolve();
+      }
+    };
+    pc.addEventListener('icegatheringstatechange', check);
+  });
+}
+
+// ---- CAMERA flow ----
+async function startCameraFlow() {
+  const pin = document.getElementById('cam-pin').value.trim();
+  if (!validatePin(pin)) {
+    alert('Introduce un PIN de 6 dígitos antes de continuar.');
+    return;
+  }
+  let statusEl;
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: 'environment',
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 24, max: 30 }
+      },
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    });
+    document.getElementById('start-cam-btn').textContent = '✓ Cámara activa';
+    document.getElementById('start-cam-btn').disabled = true;
+    document.getElementById('cam-pin').disabled = true;
+
+    createPeerConnection();
+    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+    for (const sender of pc.getSenders()) {
+      if (sender.track && sender.track.kind === 'video') {
+        try {
+          const params = sender.getParameters();
+          if (!params.encodings || params.encodings.length === 0) params.encodings = [{}];
+          params.encodings[0].maxBitrate = 2_500_000;
+          params.encodings[0].maxFramerate = 24;
+          await sender.setParameters(params);
+        } catch (e) { console.warn('Could not set bitrate:', e); }
+      }
+    }
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await waitForIceGathering();
+
+    currentCode = generateCode();
+    const offerJson = JSON.stringify(pc.localDescription);
+    const encryptedOffer = await encryptWithPin(offerJson, pin);
+    await boxPut(currentCode, 'offer', encryptedOffer);
+
+    document.getElementById('cam-step-code').style.display = 'block';
+    document.getElementById('cam-code-display').textContent = currentCode;
+    statusEl = document.getElementById('cam-status');
+    const statusText = document.getElementById('cam-status-text');
+    statusText.textContent = 'Esperando al monitor…';
+
+    pollAbort = false;
+    const encryptedAnswer = await boxPoll(currentCode, 'answer', (secs) => {
+      statusText.textContent = `Esperando al monitor… (${secs}s)`;
+    });
+
+    statusText.textContent = 'Respuesta recibida, conectando…';
+    const answerJson = await decryptWithPin(encryptedAnswer, pin);
+    const answer = JSON.parse(answerJson);
+    await pc.setRemoteDescription(answer);
+
+    await boxDelete(currentCode);
+
+    showScreen('cam-screen');
+    document.getElementById('local-video').srcObject = localStream;
+  } catch (err) {
+    console.error(err);
+    if (statusEl) {
+      statusEl.classList.add('error');
+      statusEl.querySelector('.spinner').style.display = 'none';
+      document.getElementById('cam-status-text').textContent = 'Error: ' + err.message;
+    } else {
+      alert('Error: ' + err.message);
+    }
+  }
+}
+
+// ---- MONITOR flow ----
+async function startMonitorFlow() {
+  const pin = document.getElementById('mon-pin').value.trim();
+  const codeRaw = document.getElementById('mon-code').value.trim();
+  const code = normalizeCode(codeRaw);
+
+  if (!validatePin(pin)) { alert('Introduce un PIN de 6 dígitos.'); return; }
+  if (!isValidCode(code)) { alert('El código debe ser 4 letras + 4 números, ej: BABY-4821'); return; }
+
+  const statusEl = document.getElementById('mon-status');
+  const statusText = document.getElementById('mon-status-text');
+  statusEl.style.display = 'flex';
+  statusEl.classList.remove('error', 'success');
+  statusEl.querySelector('.spinner').style.display = 'block';
+  statusText.textContent = 'Buscando código…';
+  document.getElementById('start-mon-btn').disabled = true;
+
+  try {
+    let encryptedOffer = null;
+    for (let i = 0; i < 3; i++) {
+      encryptedOffer = await boxGet(code, 'offer');
+      if (encryptedOffer) break;
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    if (!encryptedOffer) throw new Error('Código no encontrado. Comprueba que la cámara está activa.');
+
+    statusText.textContent = 'Descifrando con PIN…';
+    let offerJson;
+    try { offerJson = await decryptWithPin(encryptedOffer, pin); }
+    catch (e) { throw new Error('PIN incorrecto.'); }
+    const offer = JSON.parse(offerJson);
+
+    statusText.textContent = 'Preparando conexión…';
+    createPeerConnection();
+    await pc.setRemoteDescription(offer);
+
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    await waitForIceGathering();
+
+    statusText.textContent = 'Enviando respuesta…';
+    const answerJson = JSON.stringify(pc.localDescription);
+    const encryptedAnswer = await encryptWithPin(answerJson, pin);
+    await boxPut(code, 'answer', encryptedAnswer);
+    currentCode = code;
+
+    statusText.textContent = 'Conectando vídeo P2P…';
+    const connected = await new Promise((resolve) => {
+      const timeout = setTimeout(() => resolve(false), 15000);
+      const check = () => {
+        if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+          clearTimeout(timeout);
+          pc.removeEventListener('iceconnectionstatechange', check);
+          resolve(true);
+        }
+      };
+      pc.addEventListener('iceconnectionstatechange', check);
+      check();
+    });
+
+    if (!connected) throw new Error('No se pudo establecer la conexión P2P. Asegúrate de que ambos móviles están en la misma WiFi.');
+
+    statusText.textContent = 'Conectado ✓';
+    statusEl.classList.add('success');
+    showScreen('mon-screen');
+  } catch (err) {
+    console.error(err);
+    statusEl.classList.add('error');
+    statusEl.querySelector('.spinner').style.display = 'none';
+    statusText.textContent = err.message;
+    document.getElementById('start-mon-btn').disabled = false;
+  }
+}
+
+// ---- Audio analyser & cry detection ----
+function setupAudioAnalyser(stream) {
+  try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(stream);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 512;
+    source.connect(analyser);
+    runLevelLoop();
+  } catch (err) { console.warn('Audio analyser failed:', err); }
+}
+function runLevelLoop() {
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  const bar = document.getElementById('level-bar');
+  const valueEl = document.getElementById('level-value');
+  const thresholdEl = document.getElementById('threshold');
+  const thresholdValueEl = document.getElementById('threshold-value');
+  thresholdEl.addEventListener('input', () => {
+    thresholdValueEl.textContent = thresholdEl.value + '%';
+  });
+  const tick = () => {
+    analyser.getByteFrequencyData(data);
+    let sum = 0;
+    for (let i = 0; i < data.length; i++) sum += data[i];
+    const avg = sum / data.length;
+    const percent = Math.min(100, Math.round((avg / 128) * 100));
+    bar.style.width = percent + '%';
+    valueEl.textContent = percent + '%';
+    const threshold = parseInt(thresholdEl.value);
+    if (percent >= threshold) {
+      if (aboveThresholdSince === null) aboveThresholdSince = Date.now();
+      if (Date.now() - aboveThresholdSince > 1500 && !alertActive) triggerAlert();
+    } else {
+      aboveThresholdSince = null;
+      if (alertActive && percent < threshold * 0.6) clearAlert();
+    }
+    levelRAF = requestAnimationFrame(tick);
+  };
+  tick();
+}
+function triggerAlert() {
+  alertActive = true;
+  document.getElementById('alert-banner').classList.add('show');
+  if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]);
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 800;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+    osc.start(); osc.stop(ctx.currentTime + 0.5);
+  } catch (e) {}
+}
+function clearAlert() {
+  alertActive = false;
+  document.getElementById('alert-banner').classList.remove('show');
+}
+
+// ---- Hangup ----
+function hangup() {
+  pollAbort = true;
+  if (currentCode) { boxDelete(currentCode); currentCode = null; }
+  if (pc) { pc.close(); pc = null; }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  if (audioContext) { try { audioContext.close(); } catch (e) {} audioContext = null; }
+  if (levelRAF) cancelAnimationFrame(levelRAF);
+  document.getElementById('start-cam-btn').textContent = 'Activar cámara';
+  document.getElementById('start-cam-btn').disabled = false;
+  const camPin = document.getElementById('cam-pin');
+  const monPin = document.getElementById('mon-pin');
+  if (camPin) camPin.disabled = false;
+  if (monPin) monPin.disabled = false;
+  document.getElementById('cam-step-code').style.display = 'none';
+  const monStatus = document.getElementById('mon-status');
+  if (monStatus) monStatus.style.display = 'none';
+  const monBtn = document.getElementById('start-mon-btn');
+  if (monBtn) monBtn.disabled = false;
+  alertActive = false;
+  aboveThresholdSince = null;
+}
+
+// Auto-format code input
+document.addEventListener('DOMContentLoaded', () => {
+  const monCodeInput = document.getElementById('mon-code');
+  if (monCodeInput) {
+    monCodeInput.addEventListener('input', (e) => {
+      let v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (v.length > 4) v = v.slice(0, 4) + '-' + v.slice(4, 8);
+      e.target.value = v;
+    });
+  }
+});
+
+// Wake lock
+let wakeLock = null;
+async function requestWakeLock() {
+  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); }
+  catch (e) {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') requestWakeLock();
+});
+requestWakeLock();
+</script>
+
+
+</body></html>

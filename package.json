@@ -1,0 +1,9 @@
+{
+  "name": "cunabit-vercel",
+  "version": "5.1.0",
+  "private": true,
+  "description": "Cunabit — monitor de bebé P2P (deploy en Vercel)",
+  "engines": {
+    "node": "20.x"
+  }
+}
