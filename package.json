@@ -5,5 +5,8 @@
   "description": "Cunabit — monitor de bebé P2P (deploy en Vercel)",
   "engines": {
     "node": "20.x"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
   }
 }
