@@ -942,7 +942,7 @@
         </button>
       </div>
     </div>
-    <div class="alert" id="alert-banner" role="alert" aria-live="assertive">Llanto detectado</div>
+    <div class="alert" id="alert-banner" role="alert" aria-live="assertive">Posible llanto</div>
     <button class="btn audio-unlock" type="button" id="audio-unlock-btn" onclick="resumeMonitorAudio()">Activar audio</button>
     <div class="mon-bottom">
       <div class="meter"><div class="meter-bar" id="level-bar"></div></div>
@@ -956,9 +956,9 @@
         <span class="control-value" id="monitor-volume-value">150%</span>
       </div>
       <div class="control-row">
-        <span class="control-label">Umbral</span>
-        <input type="range" id="threshold" min="5" max="80" value="35" aria-label="Umbral de llanto">
-        <span class="control-value" id="threshold-value">35%</span>
+        <span class="control-label">Sensibilidad</span>
+        <input type="range" id="threshold" min="10" max="70" value="35" aria-label="Sensibilidad del aviso" aria-valuetext="Media">
+        <span class="control-value" id="threshold-value">Media</span>
       </div>
     </div>
   </div>
@@ -993,8 +993,9 @@
       <h3>PIN y código</h3>
       <p>El PIN de 6 dígitos protege el emparejamiento. El código identifica el buzón temporal. Ambos son necesarios y el código caduca.</p>
 
-      <h3>Volumen y llanto</h3>
-      <p>El monitor puede amplificar el audio hasta 300%. La barra muestra el nivel detectado y el umbral decide cuándo vibrar y mostrar alerta.</p>
+      <h3>Avisos</h3>
+      <p>El monitor muestra un aviso, vibra si el dispositivo lo permite y emite un pitido corto cuando detecta sonido alto durante unos segundos.</p>
+      <p>La sensibilidad decide cuánto sonido hace falta para avisar: alta avisa antes, baja avisa solo con sonidos más fuertes.</p>
 
       <h3>Consejos</h3>
       <ul>
@@ -1601,6 +1602,18 @@
       document.getElementById('alert-banner').classList.remove('show');
     }
 
+    function updateSensitivityLabel() {
+      const thresholdInput = document.getElementById('threshold');
+      const thresholdValue = document.getElementById('threshold-value');
+      if (!thresholdInput || !thresholdValue) return;
+      const value = Number(thresholdInput.value);
+      let label = 'Media';
+      if (value <= 25) label = 'Alta';
+      if (value >= 50) label = 'Baja';
+      thresholdValue.textContent = label;
+      thresholdInput.setAttribute('aria-valuetext', label);
+    }
+
     function hangup() {
       pollAbort = true;
       if (currentCode) { boxDelete(currentCode); currentCode = null; }
@@ -1652,9 +1665,8 @@
       }
 
       if (thresholdInput) {
-        thresholdInput.addEventListener('input', () => {
-          thresholdValue.textContent = thresholdInput.value + '%';
-        });
+        thresholdInput.addEventListener('input', updateSensitivityLabel);
+        updateSensitivityLabel();
       }
 
       if (volumeInput) {
