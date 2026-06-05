@@ -6,3 +6,8 @@ node_modules/
 .DS_Store
 Thumbs.db
 *.log
+*.zip
+*.map
+dist/
+build/
+coverage/

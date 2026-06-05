@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cunabit.vercel.app/sitemap.xml
