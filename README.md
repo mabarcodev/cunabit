@@ -64,6 +64,10 @@ Si esas variables existen, `/api/box` guarda el buzón temporal en Redis/KV con 
 
 CUNABIT evita relays externos y mantiene el vídeo/audio en conexión directa dentro de la red privada. El emparejamiento sí usa un buzón temporal en Vercel con datos cifrados y caducidad de 5 minutos. El PIN de 6 dígitos protege el emparejamiento cómodo, pero no debe tratarse como una contraseña fuerte ni compartirse fuera del momento de conexión.
 
+## Autoría
+
+El home usa el patrón `AUTHOR_FOOTER_MINIMAL_BRANDED`: firma discreta con isotipo pequeño, texto `Hecho con cariño por MabarcoDev` y enlaces secundarios `Web · GitHub · Instagram`.
+
 ## Enlaces
 
 - Web: https://www.mabarcodev.com/

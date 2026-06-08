@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Actualizado el footer de autor al patrón `AUTHOR_FOOTER_MINIMAL_BRANDED`, con isotipo pequeño, firma discreta y enlaces Web, GitHub e Instagram.
+
 ## 5.2.0 - 2026-06-05
 
 - Endurecido el buzón temporal de emparejamiento.
