@@ -59,15 +59,25 @@
       --ink-3: #8d8878;
       --line: #e8e1d3;
       --line-2: #ddd4c1;
-      --accent: oklch(62% 0.14 300);
-      --accent-ink: oklch(38% 0.10 300);
-      --accent-wash: oklch(95% 0.03 300);
-      --ok: oklch(65% 0.14 160);
-      --warn: oklch(65% 0.18 30);
+      --accent: #9b72cf;
+      --accent-ink: #533a78;
+      --accent-wash: #f2ecf9;
+      --ok: #2fa877;
+      --warn: #e2603f;
       --radius: 16px;
       --radius-sm: 10px;
       --shadow: 0 1px 0 rgba(27, 26, 23, 0.04), 0 8px 24px -12px rgba(27, 26, 23, 0.08);
       font-synthesis: none;
+    }
+
+    @supports (color: oklch(62% 0.14 300)) {
+      :root {
+        --accent: oklch(62% 0.14 300);
+        --accent-ink: oklch(38% 0.10 300);
+        --accent-wash: oklch(95% 0.03 300);
+        --ok: oklch(65% 0.14 160);
+        --warn: oklch(65% 0.18 30);
+      }
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -85,6 +95,7 @@
     }
 
     body {
+      min-height: 100vh;
       min-height: 100dvh;
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
@@ -117,6 +128,7 @@
       padding: 24px 20px 32px;
       max-width: 480px;
       margin: 0 auto;
+      min-height: 100vh;
       min-height: 100dvh;
     }
 
@@ -507,11 +519,13 @@
     #cam-screen, #mon-screen {
       padding: 0;
       max-width: none;
-      width: 100vw;
-      height: 100dvh;
-      min-height: 100dvh;
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      min-height: 0;
       background: #000;
-      position: relative;
       overflow: hidden;
     }
 
@@ -756,6 +770,26 @@
       }
     }
 
+    @media (orientation: landscape) and (max-height: 500px) {
+      .mon-bottom {
+        padding-top: 10px;
+        padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+      }
+
+      .cam-bottom {
+        padding-top: 10px;
+        padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+      }
+
+      .meter { margin-bottom: 6px; }
+      .meter-row { margin-bottom: 8px; }
+      .control-row + .control-row { margin-top: 6px; }
+
+      .audio-unlock {
+        top: calc(env(safe-area-inset-top) + 58px);
+      }
+    }
+
     @media (max-width: 360px) {
       .code-display .code { font-size: 30px; }
       .control-label { min-width: 64px; }
@@ -945,7 +979,7 @@
         <button class="icon-btn fit-toggle" type="button" onclick="toggleVideoFit()" aria-label="Ver imagen completa" title="Ver imagen completa" aria-pressed="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M16 3h3a2 2 0 0 1 2 2v3"></path><path d="M8 21H5a2 2 0 0 1-2-2v-3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>
         </button>
-        <button class="icon-btn" type="button" onclick="hangup()" aria-label="Terminar" title="Terminar">
+        <button class="icon-btn" type="button" onclick="goHome()" aria-label="Terminar" title="Terminar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
@@ -964,7 +998,7 @@
         <button class="icon-btn fit-toggle" type="button" onclick="toggleVideoFit()" aria-label="Ver imagen completa" title="Ver imagen completa" aria-pressed="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M16 3h3a2 2 0 0 1 2 2v3"></path><path d="M8 21H5a2 2 0 0 1-2-2v-3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>
         </button>
-        <button class="icon-btn" type="button" onclick="hangup()" aria-label="Terminar" title="Terminar">
+        <button class="icon-btn" type="button" onclick="goHome()" aria-label="Terminar" title="Terminar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
@@ -1046,6 +1080,14 @@
     const POLL_TIMEOUT_MS = 5 * 60 * 1000;
     const DEBUG = false;
 
+    // WebKit (iPhone/iPad y Safari de escritorio): la salida por Web Audio se silencia
+    // con el interruptor físico de silencio y es poco fiable con streams WebRTC,
+    // así que ahí el sonido debe salir por el elemento <video>.
+    const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const IS_SAFARI = /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(navigator.userAgent);
+    const PREFER_NATIVE_AUDIO_OUTPUT = IS_IOS || IS_SAFARI;
+
     let pc = null;
     let localStream = null;
     let role = null;
@@ -1053,7 +1095,9 @@
     let analyser = null;
     let audioSource = null;
     let gainNode = null;
-    let levelRAF = null;
+    let usingNativeAudioOutput = PREFER_NATIVE_AUDIO_OUTPUT;
+    let levelTimer = null;
+    let userPinnedFit = false;
     let aboveThresholdSince = null;
     let alertActive = false;
     let pollAbort = false;
@@ -1266,9 +1310,14 @@
         }
       };
       pc.ontrack = event => {
+        const stream = event.streams[0];
+        if (!stream) return;
         const remoteVideo = document.getElementById('remote-video');
-        remoteVideo.srcObject = event.streams[0];
-        setupMonitorAudio(event.streams[0]);
+        if (remoteVideo.srcObject !== stream) {
+          remoteVideo.srcObject = stream;
+          autoFitMonitorVideo();
+        }
+        if (event.track.kind === 'audio') setupMonitorAudio(stream);
       };
       return pc;
     }
@@ -1286,15 +1335,26 @@
       });
     }
 
+    function cameraVideoConstraints(facingMode) {
+      return {
+        facingMode,
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 24, max: 30 }
+      };
+    }
+
     async function openCameraStream(facingMode) {
       return navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode,
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          frameRate: { ideal: 24, max: 30 }
-        },
+        video: cameraVideoConstraints(facingMode),
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      });
+    }
+
+    async function openVideoOnlyStream(facingMode) {
+      return navigator.mediaDevices.getUserMedia({
+        video: cameraVideoConstraints(facingMode),
+        audio: false
       });
     }
 
@@ -1386,23 +1446,35 @@
       }
     }
 
+    async function adoptCameraVideoStream(nextStream) {
+      const nextVideoTrack = nextStream.getVideoTracks()[0];
+      if (!nextVideoTrack) {
+        nextStream.getTracks().forEach(track => track.stop());
+        throw new Error('camera_unavailable');
+      }
+      const sender = pc && pc.getSenders().find(item => item.track && item.track.kind === 'video');
+      if (sender) await sender.replaceTrack(nextVideoTrack);
+      localStream.addTrack(nextVideoTrack);
+      document.getElementById('local-video').srcObject = localStream;
+    }
+
     async function switchCamera() {
       if (!localStream) return;
       const nextFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+      // Muchos Android no permiten dos cámaras abiertas a la vez: hay que liberar
+      // la actual antes de pedir la siguiente.
+      const oldVideoTrack = localStream.getVideoTracks()[0];
+      if (oldVideoTrack) {
+        oldVideoTrack.stop();
+        localStream.removeTrack(oldVideoTrack);
+      }
       try {
-        const nextStream = await openCameraStream(nextFacingMode);
-        const nextVideoTrack = nextStream.getVideoTracks()[0];
-        if (!nextVideoTrack) throw new Error('camera_unavailable');
-        const oldVideoTrack = localStream.getVideoTracks()[0];
-        const sender = pc && pc.getSenders().find(item => item.track && item.track.kind === 'video');
-        if (sender && nextVideoTrack) await sender.replaceTrack(nextVideoTrack);
-        if (oldVideoTrack) oldVideoTrack.stop();
-        if (oldVideoTrack) localStream.removeTrack(oldVideoTrack);
-        localStream.addTrack(nextVideoTrack);
-        nextStream.getAudioTracks().forEach(track => track.stop());
-        document.getElementById('local-video').srcObject = localStream;
+        await adoptCameraVideoStream(await openVideoOnlyStream(nextFacingMode));
         currentFacingMode = nextFacingMode;
       } catch {
+        try {
+          await adoptCameraVideoStream(await openVideoOnlyStream(currentFacingMode));
+        } catch {}
         alert('No se pudo cambiar de cámara en este dispositivo.');
       }
     }
@@ -1410,9 +1482,26 @@
     function toggleVideoFit() {
       const active = document.querySelector('.screen.active');
       if (active && (active.id === 'cam-screen' || active.id === 'mon-screen')) {
+        userPinnedFit = true;
         const isContain = active.classList.toggle('fit-contain');
         updateFitButtons(isContain);
       }
+    }
+
+    // Si la cámara graba en vertical y el monitor está en horizontal (o al revés),
+    // `cover` recorta casi toda la imagen: en ese caso se pasa a `contain` solo,
+    // salvo que la persona haya elegido encuadre manualmente.
+    function autoFitMonitorVideo() {
+      if (userPinnedFit) return;
+      const monScreen = document.getElementById('mon-screen');
+      if (!monScreen.classList.contains('active')) return;
+      const video = document.getElementById('remote-video');
+      if (!video.videoWidth || !video.videoHeight) return;
+      const videoIsLandscape = video.videoWidth > video.videoHeight;
+      const viewIsLandscape = window.innerWidth > window.innerHeight;
+      const mismatch = videoIsLandscape !== viewIsLandscape;
+      monScreen.classList.toggle('fit-contain', mismatch);
+      updateFitButtons(mismatch);
     }
 
     function updateFitButtons(isContain) {
@@ -1496,6 +1585,7 @@
         statusText.textContent = 'Conectado';
         statusEl.classList.add('success');
         showScreen('mon-screen');
+        autoFitMonitorVideo();
         requestWakeLock();
       } catch (err) {
         statusEl.classList.add('error');
@@ -1523,37 +1613,67 @@
     }
 
     function setupMonitorAudio(stream) {
+      closeMonitorAudio();
+      usingNativeAudioOutput = PREFER_NATIVE_AUDIO_OUTPUT;
       try {
-        closeMonitorAudio();
+        // El analizador (medidor de nivel y aviso de llanto) usa Web Audio siempre.
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         audioSource = audioContext.createMediaStreamSource(stream);
-        gainNode = audioContext.createGain();
         analyser = audioContext.createAnalyser();
         analyser.fftSize = 512;
-        audioSource.connect(gainNode);
         audioSource.connect(analyser);
-        gainNode.connect(audioContext.destination);
-        applyMonitorVolume(false);
-        document.getElementById('remote-video').muted = true;
-        resumeMonitorAudio();
-        runLevelLoop();
+        if (!usingNativeAudioOutput) {
+          // Solo fuera de WebKit la salida pasa por Web Audio (permite ganancia >100%).
+          gainNode = audioContext.createGain();
+          audioSource.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+        }
       } catch {
-        document.getElementById('remote-video').muted = false;
+        usingNativeAudioOutput = true;
+      }
+      document.getElementById('remote-video').muted = !usingNativeAudioOutput;
+      configureVolumeControlRange();
+      applyMonitorVolume(false);
+      resumeMonitorAudio();
+      runLevelLoop();
+    }
+
+    function configureVolumeControlRange() {
+      const volumeInput = document.getElementById('monitor-volume');
+      if (!volumeInput) return;
+      if (usingNativeAudioOutput) {
+        // Sin ganancia por Web Audio no hay amplificación: el control llega al 100%
+        // y el resto lo pone el volumen físico del dispositivo.
+        if (Number(volumeInput.value) > 100) volumeInput.value = 100;
+        volumeInput.max = 100;
+      } else {
+        volumeInput.max = 300;
       }
     }
 
     async function resumeMonitorAudio() {
-      if (!audioContext) return;
-      try {
-        await audioContext.resume();
-      } catch {}
+      let blocked = false;
+      if (audioContext && audioContext.state !== 'running') {
+        try {
+          await audioContext.resume();
+        } catch {}
+        if (audioContext && audioContext.state !== 'running') blocked = true;
+      }
+      const remoteVideo = document.getElementById('remote-video');
+      if (remoteVideo && remoteVideo.srcObject && remoteVideo.paused) {
+        try {
+          await remoteVideo.play();
+        } catch {
+          blocked = true;
+        }
+      }
       const button = document.getElementById('audio-unlock-btn');
-      if (button) button.classList.toggle('show', audioContext.state === 'suspended');
+      if (button) button.classList.toggle('show', blocked);
     }
 
     function closeMonitorAudio() {
-      if (levelRAF) cancelAnimationFrame(levelRAF);
-      levelRAF = null;
+      if (levelTimer) clearInterval(levelTimer);
+      levelTimer = null;
       if (audioContext) {
         try { audioContext.close(); } catch {}
       }
@@ -1570,6 +1690,13 @@
       const valueEl = document.getElementById('monitor-volume-value');
       const gainValue = Math.max(0, Math.min(3, Number(volumeInput.value) / 100));
       valueEl.textContent = `${volumeInput.value}%`;
+      if (usingNativeAudioOutput) {
+        const remoteVideo = document.getElementById('remote-video');
+        // En iPhone `volume` es de solo lectura y se ignora sin error;
+        // ahí manda el volumen físico del dispositivo.
+        try { remoteVideo.volume = Math.min(1, gainValue); } catch {}
+        return;
+      }
       if (!gainNode || !audioContext) return;
       const now = audioContext.currentTime;
       gainNode.gain.cancelScheduledValues(now);
@@ -1587,6 +1714,7 @@
       const valueEl = document.getElementById('level-value');
       const thresholdEl = document.getElementById('threshold');
       const tick = () => {
+        if (!analyser) return;
         analyser.getByteFrequencyData(data);
         let sum = 0;
         for (let i = 0; i < data.length; i++) sum += data[i];
@@ -1601,8 +1729,10 @@
           aboveThresholdSince = null;
           if (alertActive && percent < threshold * 0.6) clearAlert();
         }
-        levelRAF = requestAnimationFrame(tick);
       };
+      // setInterval en vez de requestAnimationFrame: rAF se congela con la app en
+      // segundo plano o la pantalla apagada y dejaría de detectarse el llanto.
+      levelTimer = setInterval(tick, 120);
       tick();
     }
 
@@ -1610,8 +1740,23 @@
       alertActive = true;
       document.getElementById('alert-banner').classList.add('show');
       if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]);
+      playAlertBeep();
+    }
+
+    function playAlertBeep() {
+      // Reutiliza el contexto ya desbloqueado: crear uno por pitido fugaba
+      // contextos (límite ~6 por página) y fuera de un gesto nace suspendido.
+      if (audioContext && audioContext.state === 'running') {
+        beepWith(audioContext, false);
+        return;
+      }
       try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        beepWith(new (window.AudioContext || window.webkitAudioContext)(), true);
+      } catch {}
+    }
+
+    function beepWith(ctx, closeAfter) {
+      try {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -1621,7 +1766,10 @@
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
         osc.start();
         osc.stop(ctx.currentTime + 0.5);
-      } catch {}
+        if (closeAfter) osc.onended = () => { try { ctx.close(); } catch {} };
+      } catch {
+        if (closeAfter) { try { ctx.close(); } catch {} }
+      }
     }
 
     function clearAlert() {
@@ -1653,6 +1801,8 @@
       }
       closeMonitorAudio();
       releaseWakeLock();
+      document.getElementById('remote-video').srcObject = null;
+      document.getElementById('local-video').srcObject = null;
       document.getElementById('remote-video').muted = false;
       document.getElementById('start-cam-btn').textContent = 'Activar cámara';
       document.getElementById('start-cam-btn').disabled = false;
@@ -1672,6 +1822,7 @@
       if (monBtn) monBtn.disabled = false;
       alertActive = false;
       aboveThresholdSince = null;
+      userPinnedFit = false;
       document.getElementById('cam-screen').classList.remove('fit-contain');
       document.getElementById('mon-screen').classList.remove('fit-contain');
       updateFitButtons(false);
@@ -1699,6 +1850,23 @@
       if (volumeInput) {
         volumeInput.addEventListener('input', () => applyMonitorVolume(true));
       }
+
+      const remoteVideo = document.getElementById('remote-video');
+      if (remoteVideo) {
+        remoteVideo.addEventListener('loadedmetadata', autoFitMonitorVideo);
+        // El evento `resize` del vídeo salta cuando el móvil-cámara rota y el
+        // track cambia de dimensiones.
+        remoteVideo.addEventListener('resize', autoFitMonitorVideo);
+      }
+      window.addEventListener('resize', autoFitMonitorVideo);
+      window.addEventListener('orientationchange', autoFitMonitorVideo);
+      // Tercera señal de giro: algunos WebView no emiten resize/orientationchange.
+      try {
+        const orientationQuery = window.matchMedia('(orientation: landscape)');
+        if (orientationQuery && orientationQuery.addEventListener) {
+          orientationQuery.addEventListener('change', autoFitMonitorVideo);
+        }
+      } catch {}
 
       document.addEventListener('keydown', event => {
         const openModalEl = document.querySelector('.modal-overlay.show');
@@ -1743,7 +1911,12 @@
     }
 
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && isLiveScreenActive()) requestWakeLock();
+      if (document.visibilityState === 'visible' && isLiveScreenActive()) {
+        requestWakeLock();
+        // iOS suspende el AudioContext al bloquear la pantalla o cambiar de app
+        // y no lo reanuda solo al volver.
+        if (role === 'monitor') resumeMonitorAudio();
+      }
     });
     window.addEventListener('pagehide', () => {
       if (currentCode) boxDeleteOnExit(currentCode);
