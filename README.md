@@ -60,6 +60,13 @@ También son compatibles los nombres de Upstash:
 
 Si esas variables existen, `/api/box` guarda el buzón temporal en Redis/KV con TTL real. Si no existen, usa memoria local para desarrollo. El vídeo y el audio siguen yendo P2P; Redis/KV solo guarda durante unos minutos los mensajes cifrados de emparejamiento.
 
+## Notas de audio y pantalla
+
+- En iPhone y Safari el sonido del monitor sale por el propio vídeo: no se corta con el interruptor lateral de silencio y el volumen se ajusta con los botones físicos. El control en pantalla llega ahí hasta el 100%; en Android y escritorio la amplificación llega al 300%.
+- Si el navegador bloquea el sonido al conectar, aparece el botón «Activar audio»; un toque lo recupera. Al volver a la app tras bloquear la pantalla, el audio se reanuda solo.
+- Si la cámara graba en vertical y el monitor está en horizontal (o al revés), el monitor muestra la imagen completa automáticamente. El botón de encuadre permite cambiarlo a mano y esa elección se respeta.
+- La detección de llanto sigue activa con el monitor en segundo plano. Aun así, lo recomendado es dejar la app visible: el aviso con vibración y el refresco del medidor dependen del sistema cuando la app no está en primer plano.
+
 ## Límites de privacidad
 
 CUNABIT evita relays externos y mantiene el vídeo/audio en conexión directa dentro de la red privada. El emparejamiento sí usa un buzón temporal en Vercel con datos cifrados y caducidad de 5 minutos. El PIN de 6 dígitos protege el emparejamiento cómodo, pero no debe tratarse como una contraseña fuerte ni compartirse fuera del momento de conexión.

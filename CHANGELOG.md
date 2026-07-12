@@ -3,6 +3,17 @@
 ## Unreleased
 
 - Actualizado el footer de autor al patrón `AUTHOR_FOOTER_MINIMAL_BRANDED`, con isotipo pequeño, firma discreta y enlaces Web, GitHub e Instagram.
+- Arreglado el audio del monitor en iPhone y Safari: el sonido sale por el elemento de vídeo, que no se silencia con el interruptor lateral ni depende de Web Audio; el medidor y el aviso de llanto siguen usando Web Audio.
+- En iPhone y Safari el control de volumen llega al 100% (la amplificación hasta 300% requiere Web Audio y se mantiene en Android y escritorio); el resto lo pone el volumen físico.
+- Arreglado el pitido de aviso tras varias alertas: se reutiliza un único contexto de audio en vez de crear uno nuevo por pitido, que acababa bloqueado por el navegador.
+- La detección de llanto sigue activa con la app en segundo plano: el análisis usa un temporizador en vez de `requestAnimationFrame`, que se congela con la pantalla apagada.
+- El audio se reanuda solo al volver a la app y el botón «Activar audio» también cubre el caso de vídeo bloqueado por autoplay.
+- Las pantallas de cámara y monitor cubren todo el viewport en móviles con notch, sin franjas de color ni scroll residual.
+- Añadidos fallbacks de `100vh` y de colores en hex para navegadores antiguos sin `100dvh` ni `oklch` (caso típico: móvil viejo usado como cámara).
+- Encuadre automático: si la cámara y el monitor están en orientaciones distintas se muestra la imagen completa; la elección manual con el botón de encuadre siempre manda.
+- Vista horizontal compacta: los controles del monitor tapan menos vídeo en apaisado.
+- Cambio de cámara compatible con más Android: se libera la cámara actual antes de abrir la otra, ya no se vuelve a pedir el micrófono y se restaura la cámara anterior si falla.
+- El botón «Terminar» vuelve a la pantalla de inicio; antes cortaba la sesión pero dejaba una pantalla negra sin salida.
 
 ## 5.2.0 - 2026-06-05
 
