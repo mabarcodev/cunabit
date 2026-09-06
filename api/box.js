@@ -42,7 +42,10 @@ async function redisCommand(command) {
     body: JSON.stringify(command)
   });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok || body.error) throw new Error('store_unavailable');
+  if (!res.ok || body.error) {
+    console.error('[box] redis failed', { status: res.status, detail: body && body.error });
+    throw new Error('store_unavailable');
+  }
   return body.result;
 }
 
@@ -300,7 +303,12 @@ async function handler(req, res) {
         : await handleDelete(storage, body);
 
     return send(res, result.status, result.body);
-  } catch {
+  } catch (err) {
+    console.error('[box] unhandled', {
+      message: err && err.message,
+      store: hasRedisConfig() ? 'redis' : 'memory',
+      stack: err && err.stack
+    });
     if (!res.headersSent) setCommonHeaders(res);
     return send(res, 500, { error: 'server_error' });
   }
