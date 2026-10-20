@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Si Redis/KV no responde (base de Upstash archivada por inactividad, credenciales caducadas o timeout), `/api/box` devuelve `503 store_unavailable` en vez de un `500 server_error` genérico, y la app muestra «el servicio de emparejamiento no está disponible». Antes un fallo de DNS del almacén no dejaba rastro útil en los logs; ahora se registra la causa (`[box] redis unreachable`, p. ej. `ENOTFOUND`) sin credenciales.
+- Las llamadas a Redis tienen un timeout de 5 s para que la función no quede colgada.
+- `/api/box` solo usa pares completos de variables (`KV_REST_API_URL` + `KV_REST_API_TOKEN`, o `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`); antes podía mezclar la URL de un par con el token del otro.
+- Añadidos tests de la ruta Redis (flujo completo de emparejamiento, base inalcanzable y error de autenticación).
+- Runbook en `VERCEL_SETUP.md` para cuando el emparejamiento falla con error de servidor.
 - Actualizado el footer de autor al patrón `AUTHOR_FOOTER_MINIMAL_BRANDED`, con isotipo pequeño, firma discreta y enlaces Web, GitHub e Instagram.
 - Arreglado el audio del monitor en iPhone y Safari: el sonido sale por el elemento de vídeo, que no se silencia con el interruptor lateral ni depende de Web Audio; el medidor y el aviso de llanto siguen usando Web Audio.
 - En iPhone y Safari el control de volumen llega al 100% (la amplificación hasta 300% requiere Web Audio y se mantiene en Android y escritorio); el resto lo pone el volumen físico.

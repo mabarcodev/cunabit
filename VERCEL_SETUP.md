@@ -85,3 +85,24 @@ Este paso opcional no usa Vercel CLI; solo comprueba que las variables esperadas
 ## Nota de rendimiento
 
 Redis/KV solo participa durante el emparejamiento. La carga inicial de la web y el vídeo/audio P2P no pasan por Redis/KV. El impacto normal es solo unos milisegundos extra al crear o leer el código temporal.
+
+## Runbook: el emparejamiento falla con error de servidor
+
+Síntoma en la app: `Error: Servidor: 503 — el servicio de emparejamiento no está disponible` (versiones anteriores mostraban `Servidor: 500 server_error`).
+
+1. Confirma que es el almacén. Una petición con código inválido debe responder `400 invalid_code`; si responde `503 store_unavailable` (o `500` en versiones antiguas), Redis/KV está configurado pero no responde:
+
+   ```bash
+   curl -s -X POST -H "content-type: application/json" -d '{"action":"get","code":"bad","role":"offer"}' https://cunabit.vercel.app/api/box
+   ```
+
+2. Mira la causa en Vercel, `Logs`, filtrando por `[box]`:
+   - `redis unreachable` con `ENOTFOUND`: la base ya no existe. Upstash archiva las bases gratuitas tras 30 días o más sin actividad.
+   - `redis failed` con `401` o `WRONGPASS`: token caducado o variables de otra base.
+   - `redis unreachable` con `TimeoutError`: Upstash lento o caído; revisa su página de estado.
+3. En Vercel, `Storage`: restaura la base desde la consola de Upstash, o crea una nueva y conéctala al proyecto en el entorno `Production`.
+4. En `Settings > Environment Variables`, deja un solo par válido. `/api/box` prefiere `KV_REST_API_*` sobre `UPSTASH_REDIS_REST_*`: si quedan variables `KV_*` de la base antigua, seguirán ganando aunque la nueva cree `UPSTASH_*`.
+5. Los cambios de variables no se aplican a despliegues ya hechos: `Deployments`, último despliegue de `main`, `Redeploy`.
+6. Repite el paso 1: tiene que responder `400 invalid_code`. Después prueba un emparejamiento real con dos dispositivos.
+
+Para evitar que vuelva a pasar: el plan gratuito de Upstash archiva por inactividad. Si CUNABIT pasa temporadas sin uso, basta con un emparejamiento (o la petición del paso 1) cada pocas semanas para mantenerla activa; si no, valora un plan de pago.

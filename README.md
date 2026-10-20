@@ -60,6 +60,8 @@ También son compatibles los nombres de Upstash:
 
 Si esas variables existen, `/api/box` guarda el buzón temporal en Redis/KV con TTL real. Si no existen, usa memoria local para desarrollo. El vídeo y el audio siguen yendo P2P; Redis/KV solo guarda durante unos minutos los mensajes cifrados de emparejamiento.
 
+Si Redis/KV está configurado pero no responde, `/api/box` devuelve `503 store_unavailable` y la app avisa de que el emparejamiento no está disponible. Qué revisar y cómo recuperarlo: [runbook en VERCEL_SETUP.md](VERCEL_SETUP.md#runbook-el-emparejamiento-falla-con-error-de-servidor).
+
 ## Notas de audio y pantalla
 
 - En iPhone y Safari el sonido del monitor sale por el propio vídeo: no se corta con el interruptor lateral de silencio y el volumen se ajusta con los botones físicos. El control en pantalla llega ahí hasta el 100%; en Android y escritorio la amplificación llega al 300%.
