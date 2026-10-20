@@ -173,3 +173,108 @@ test('server errors do not include internal details', async () => {
   assert.equal(result.res.statusCode, 500);
   assert.deepEqual(result.json, { error: 'server_error' });
 });
+
+const REDIS_ENV_KEYS = ['KV_REST_API_URL', 'KV_REST_API_TOKEN', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'];
+const REDIS_TEST_TOKEN = 'redis-test-token-should-never-be-logged';
+
+function withRedisEnv(t, env) {
+  const saved = {};
+  for (const key of REDIS_ENV_KEYS) {
+    saved[key] = process.env[key];
+    delete process.env[key];
+  }
+  Object.assign(process.env, env);
+  t.after(() => {
+    for (const key of REDIS_ENV_KEYS) {
+      if (saved[key] === undefined) delete process.env[key];
+      else process.env[key] = saved[key];
+    }
+  });
+}
+
+// Simula la API REST de Upstash con los comandos que usa box.js (sin expiración real).
+function fakeRedisFetch() {
+  const data = new Map();
+  return async (url, init) => {
+    const [cmd, key, ...args] = JSON.parse(init.body);
+    let result = null;
+    if (cmd === 'GET') result = data.has(key) ? data.get(key) : null;
+    if (cmd === 'SET') {
+      if (args.includes('NX') && data.has(key)) result = null;
+      else {
+        data.set(key, args[0]);
+        result = 'OK';
+      }
+    }
+    if (cmd === 'INCR') {
+      data.set(key, String(Number(data.get(key) || 0) + 1));
+      result = Number(data.get(key));
+    }
+    if (cmd === 'PEXPIRE') result = 1;
+    if (cmd === 'DEL') {
+      for (const k of [key, ...args]) data.delete(k);
+      result = 1;
+    }
+    return new Response(JSON.stringify({ result }), { status: 200 });
+  };
+}
+
+test('redis config only uses complete URL and token pairs', (t) => {
+  withRedisEnv(t, { KV_REST_API_URL: 'https://kv.example', UPSTASH_REDIS_REST_TOKEN: REDIS_TEST_TOKEN });
+  assert.equal(handler.__test.redisConfig(), null);
+  assert.equal(handler.__test.createStorage().type, 'memory');
+
+  process.env.UPSTASH_REDIS_REST_URL = 'https://upstash.example';
+  assert.deepEqual(handler.__test.redisConfig(), { url: 'https://upstash.example', token: REDIS_TEST_TOKEN });
+});
+
+test('pairing flow works through the redis store', async (t) => {
+  withRedisEnv(t, { KV_REST_API_URL: 'https://kv.example/', KV_REST_API_TOKEN: REDIS_TEST_TOKEN });
+  t.mock.method(globalThis, 'fetch', fakeRedisFetch());
+
+  const put = await putOffer();
+  assert.equal(put.res.statusCode, 200);
+  assert.equal(put.json.store, 'redis');
+
+  const get = await call({ body: { action: 'get', code: CODE, role: 'offer' } });
+  assert.equal(get.json.payload, 'encrypted-offer');
+
+  const answer = await call({
+    body: { action: 'put', code: CODE, role: 'answer', payload: 'encrypted-answer', token: ANSWER_TOKEN }
+  });
+  assert.equal(answer.res.statusCode, 200);
+
+  const deleted = await call({ body: { action: 'delete', code: CODE, deleteToken: DELETE_TOKEN } });
+  assert.equal(deleted.res.statusCode, 200);
+  const gone = await call({ body: { action: 'get', code: CODE, role: 'offer' } });
+  assert.equal(gone.res.statusCode, 404);
+});
+
+test('unreachable redis answers 503 store_unavailable and logs the cause without credentials', async (t) => {
+  withRedisEnv(t, { KV_REST_API_URL: 'https://archived.example', KV_REST_API_TOKEN: REDIS_TEST_TOKEN });
+  t.mock.method(globalThis, 'fetch', async () => {
+    throw new TypeError('fetch failed', { cause: Object.assign(new Error('getaddrinfo ENOTFOUND'), { code: 'ENOTFOUND' }) });
+  });
+  const logged = t.mock.method(console, 'error', () => {});
+
+  // Un código inválido también falla: el límite de peticiones consulta Redis antes de validar.
+  const result = await call({ body: { action: 'get', code: 'BAD', role: 'offer' } });
+  assert.equal(result.res.statusCode, 503);
+  assert.deepEqual(result.json, { error: 'store_unavailable' });
+
+  assert.equal(logged.mock.callCount(), 1);
+  assert.equal(logged.mock.calls[0].arguments[0], '[box] redis unreachable');
+  assert.equal(logged.mock.calls[0].arguments[1].cause, 'ENOTFOUND');
+  assert.ok(!JSON.stringify(logged.mock.calls[0].arguments).includes(REDIS_TEST_TOKEN));
+});
+
+test('redis auth errors answer 503 store_unavailable', async (t) => {
+  withRedisEnv(t, { UPSTASH_REDIS_REST_URL: 'https://upstash.example', UPSTASH_REDIS_REST_TOKEN: REDIS_TEST_TOKEN });
+  t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({ error: 'WRONGPASS invalid or missing auth token' }), { status: 401 }));
+  const logged = t.mock.method(console, 'error', () => {});
+
+  const result = await call({ body: { action: 'get', code: CODE, role: 'offer' } });
+  assert.equal(result.res.statusCode, 503);
+  assert.deepEqual(result.json, { error: 'store_unavailable' });
+  assert.deepEqual(logged.mock.calls[0].arguments, ['[box] redis failed', { status: 401, detail: 'WRONGPASS invalid or missing auth token' }]);
+});

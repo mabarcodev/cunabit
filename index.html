@@ -1238,7 +1238,12 @@
         let errText = `HTTP ${res.status}`;
         try {
           const responseBody = await res.json();
-          if (responseBody && responseBody.error) errText = `${res.status} ${responseBody.error}`;
+          if (responseBody && responseBody.error === 'store_unavailable') {
+            // Mantener el prefijo "Servidor: 5xx": boxPut reintenta según ese patrón.
+            errText = `${res.status} — el servicio de emparejamiento no está disponible. Inténtalo de nuevo en unos minutos.`;
+          } else if (responseBody && responseBody.error) {
+            errText = `${res.status} ${responseBody.error}`;
+          }
         } catch {}
         throw new Error('Servidor: ' + errText);
       }

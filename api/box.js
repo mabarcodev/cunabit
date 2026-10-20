@@ -7,20 +7,32 @@ const CODE_REGEX = /^[A-Z]{4}-\d{4}$/;
 const TOKEN_REGEX = /^[A-Za-z0-9_-]{22,}$/;
 const VALID_ROLES = new Set(['offer', 'answer']);
 const VALID_ACTIONS = new Set(['put', 'get', 'delete']);
+const REDIS_TIMEOUT_MS = 5000;
 
 const memoryStore = globalThis.__cunabitStore || (globalThis.__cunabitStore = new Map());
 const memoryRateStore = globalThis.__cunabitRateStore || (globalThis.__cunabitRateStore = new Map());
 
-function redisUrl() {
-  return process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '';
-}
-
-function redisToken() {
-  return process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '';
+// Solo pares completos: mezclar la URL de KV_* con el token de UPSTASH_* (o al revés)
+// apunta a una base con credenciales de otra y falla en cada petición.
+function redisConfig() {
+  const env = process.env;
+  if (env.KV_REST_API_URL && env.KV_REST_API_TOKEN) {
+    return { url: env.KV_REST_API_URL, token: env.KV_REST_API_TOKEN };
+  }
+  if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) {
+    return { url: env.UPSTASH_REDIS_REST_URL, token: env.UPSTASH_REDIS_REST_TOKEN };
+  }
+  return null;
 }
 
 function hasRedisConfig() {
-  return Boolean(redisUrl() && redisToken());
+  return redisConfig() !== null;
+}
+
+function storeUnavailable() {
+  const err = new Error('store_unavailable');
+  err.status = 503;
+  return err;
 }
 
 function keyPrefix() {
@@ -32,19 +44,31 @@ function storageKey(key) {
 }
 
 async function redisCommand(command) {
-  const endpoint = redisUrl().replace(/\/+$/, '');
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${redisToken()}`,
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify(command)
-  });
+  const { url, token } = redisConfig();
+  let res;
+  try {
+    res = await fetch(url.replace(/\/+$/, ''), {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify(command),
+      signal: AbortSignal.timeout(REDIS_TIMEOUT_MS)
+    });
+  } catch (err) {
+    // Una base de Upstash archivada por inactividad deja de resolver por DNS: fetch lanza
+    // antes de tener respuesta, así que la causa solo queda registrada aquí.
+    console.error('[box] redis unreachable', {
+      name: err && err.name,
+      cause: err && err.cause && (err.cause.code || err.cause.message)
+    });
+    throw storeUnavailable();
+  }
   const body = await res.json().catch(() => ({}));
   if (!res.ok || body.error) {
     console.error('[box] redis failed', { status: res.status, detail: body && body.error });
-    throw new Error('store_unavailable');
+    throw storeUnavailable();
   }
   return body.result;
 }
@@ -304,12 +328,17 @@ async function handler(req, res) {
 
     return send(res, result.status, result.body);
   } catch (err) {
+    if (!res.headersSent) setCommonHeaders(res);
+    // redisCommand ya registró la causa; aquí solo se distingue para que el cliente sepa
+    // que es el almacén y no un fallo del código.
+    if (err && err.message === 'store_unavailable') {
+      return send(res, 503, { error: 'store_unavailable' });
+    }
     console.error('[box] unhandled', {
       message: err && err.message,
       store: hasRedisConfig() ? 'redis' : 'memory',
       stack: err && err.stack
     });
-    if (!res.headersSent) setCommonHeaders(res);
     return send(res, 500, { error: 'server_error' });
   }
 }
@@ -319,6 +348,7 @@ handler.__test = {
   createRedisStorage,
   createStorage,
   redisCommand,
+  redisConfig,
   storageKey,
   store: memoryStore,
   rateStore: memoryRateStore,
