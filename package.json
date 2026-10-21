@@ -4,12 +4,16 @@
   "private": true,
   "description": "CUNABIT, monitor de bebé P2P LAN primero para navegador",
   "scripts": {
-    "dev": "node scripts/dev-server.mjs",
-    "test": "node --test",
-    "check": "node --test && node scripts/static-check.mjs",
-    "check:prod": "node scripts/check-production-config.mjs"
+    "dev": "wrangler dev",
+    "test": "node --test --import ./test-support/register.mjs",
+    "check": "npm test && node scripts/static-check.mjs",
+    "check:deploy": "wrangler deploy --dry-run --outdir .wrangler/dry-run",
+    "deploy": "wrangler deploy"
   },
   "engines": {
     "node": "24.x"
+  },
+  "devDependencies": {
+    "wrangler": "4.151.3"
   }
 }

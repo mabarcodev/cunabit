@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const root = process.cwd();
-const ignoredDirs = new Set(['.git', 'node_modules', '.vercel', 'coverage']);
+const ignoredDirs = new Set(['.git', 'node_modules', '.vercel', '.wrangler', 'coverage']);
 const textExtensions = new Set(['.html', '.js', '.json', '.md', '.txt', '.xml', '.mjs', '.svg']);
 const forbidden = [
   /data-cc-id/i,

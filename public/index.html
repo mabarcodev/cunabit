@@ -1033,7 +1033,7 @@
       <p>Funciona cuando ambos móviles están en la misma WiFi o cuando uno comparte datos y el otro se conecta a ese hotspot. El vídeo y el audio viajan directos entre los dispositivos.</p>
 
       <h3>Emparejamiento temporal</h3>
-      <p>Al principio se usa un buzón temporal en Vercel para que los dos dispositivos se encuentren. Ese intercambio va cifrado con tu PIN y caduca a los 5 minutos.</p>
+      <p>Al principio se usa un buzón temporal en Cloudflare para que los dos dispositivos se encuentren. Ese intercambio va cifrado con tu PIN y caduca a los 5 minutos.</p>
 
       <h3>Sin cuentas</h3>
       <p>No hay registro, contraseña guardada ni lista de usuarios. Si terminas la sesión, el código se borra y para volver a conectar hay que emparejar otra vez.</p>
@@ -1073,7 +1073,6 @@
   <script>
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
   </script>
-  <script defer src="/_vercel/insights/script.js"></script>
   <script>
     const API_BASE = '/api/box';
     const POLL_INTERVAL_MS = 1500;
