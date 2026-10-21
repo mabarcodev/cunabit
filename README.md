@@ -6,13 +6,13 @@ CUNABIT es un monitor de bebé P2P para navegador. Usa dos dispositivos en la mi
 
 - La cámara pide permiso de cámara y micrófono.
 - El monitor introduce el mismo PIN y el código temporal que muestra la cámara.
-- El emparejamiento usa `/api/box` como buzón temporal cifrado.
+- El emparejamiento usa `/api/box` como buzón temporal cifrado, alojado en Cloudflare con Durable Objects.
 - Después del emparejamiento, el vídeo y el audio van directos entre los dispositivos mediante WebRTC.
 - No se configura STUN/TURN: el producto está pensado para red local primero.
 
 ## Uso
 
-1. Abre `https://cunabit.vercel.app/` en los dos dispositivos.
+1. Abre `https://cunabit.mabarcodev.workers.dev/` en los dos dispositivos. La dirección antigua `https://cunabit.vercel.app/` redirige a esta.
 2. En el móvil que queda con el bebé, toca `Soy la cámara`.
 3. Crea un PIN de 6 dígitos y activa la cámara.
 4. En el otro móvil, toca `Soy el monitor`.
@@ -23,44 +23,26 @@ También funciona si un móvil comparte datos y el otro se conecta a ese hotspot
 ## Desarrollo local
 
 ```bash
-npm test
-npm run check
-npm run dev
+npm install
+npm test            # tests del Worker
+npm run check       # tests + checks estáticos
+npm run dev         # wrangler dev en http://localhost:8787/
+npm run check:deploy  # valida la configuración de Cloudflare sin publicar
 ```
 
-`npm run dev` sirve la app y el buzón temporal en `http://127.0.0.1:4173/`. La cámara y el micrófono requieren HTTPS en producción; en local los navegadores permiten `localhost`.
+`npm run dev` ejecuta la app con el mismo motor que Cloudflare, incluidos los Durable Objects reales. La cámara y el micrófono requieren HTTPS en producción; en local los navegadores permiten `localhost`.
 
-## Vercel
+## Cloudflare
 
-El proyecto está preparado para Vercel:
+CUNABIT se publica como un Worker de Cloudflare:
 
-- `index.html` sirve la app.
-- `api/box.js` sirve el buzón temporal en `/api/box`.
-- `vercel.json` define cabeceras de seguridad y cache.
-- `robots.txt` y `sitemap.xml` apuntan a `https://cunabit.vercel.app/`.
-- `favicon.svg`, `site.webmanifest` y `og-image.svg` mejoran identidad, instalación y vista previa al compartir.
+- `public/` contiene todo lo que se sirve: `index.html`, iconos, manifest, `robots.txt`, `sitemap.xml` y `_headers` (cabeceras de seguridad y caché). Nada fuera de esa carpeta se publica.
+- `src/worker.mjs` atiende `/api/box`. Cada código de emparejamiento es un Durable Object (`PairingBox`) que guarda solo el paquete cifrado y los tokens efímeros, y lo borra con una alarma a los 5 minutos. `RateLimiter` limita a 120 peticiones por minuto e IP, en memoria.
+- `wrangler.jsonc` define el Worker, los Durable Objects y los logs. No hace falta ninguna variable de entorno ni base de datos externa.
+- Cada push a `main` se publica solo (Workers Builds conectado al repo de GitHub).
+- `vercel.json` solo redirige `cunabit.vercel.app` a la nueva dirección.
 
-Guía paso a paso sin instalar Vercel CLI: [VERCEL_SETUP.md](VERCEL_SETUP.md).
-
-Para ver visitas, activa Web Analytics desde el dashboard de Vercel del proyecto. El HTML incluye el script de Vercel Analytics para sitios estáticos.
-
-Variable opcional de producción:
-
-- `CUNABIT_ALLOWED_ORIGIN`: origen permitido por CORS para `/api/box`. Por defecto usa `https://cunabit.vercel.app`.
-
-Variables recomendadas para producción estable:
-
-- `KV_REST_API_URL`
-- `KV_REST_API_TOKEN`
-
-También son compatibles los nombres de Upstash:
-
-- `UPSTASH_REDIS_REST_URL`
-- `UPSTASH_REDIS_REST_TOKEN`
-
-Si esas variables existen, `/api/box` guarda el buzón temporal en Redis/KV con TTL real. Si no existen, usa memoria local para desarrollo. El vídeo y el audio siguen yendo P2P; Redis/KV solo guarda durante unos minutos los mensajes cifrados de emparejamiento.
-
-Si Redis/KV está configurado pero no responde, `/api/box` devuelve `503 store_unavailable` y la app avisa de que el emparejamiento no está disponible. Qué revisar y cómo recuperarlo: [runbook en VERCEL_SETUP.md](VERCEL_SETUP.md#runbook-el-emparejamiento-falla-con-error-de-servidor).
+Configuración, operación y qué hacer si algo falla: [CLOUDFLARE_SETUP.md](CLOUDFLARE_SETUP.md). Por qué se eligió esta arquitectura: [docs/adr/0001-cloudflare-durable-objects.md](docs/adr/0001-cloudflare-durable-objects.md).
 
 ## Notas de audio y pantalla
 
@@ -71,7 +53,7 @@ Si Redis/KV está configurado pero no responde, `/api/box` devuelve `503 store_u
 
 ## Límites de privacidad
 
-CUNABIT evita relays externos y mantiene el vídeo/audio en conexión directa dentro de la red privada. El emparejamiento sí usa un buzón temporal en Vercel con datos cifrados y caducidad de 5 minutos. El PIN de 6 dígitos protege el emparejamiento cómodo, pero no debe tratarse como una contraseña fuerte ni compartirse fuera del momento de conexión.
+CUNABIT evita relays externos y mantiene el vídeo/audio en conexión directa dentro de la red privada. El emparejamiento sí usa un buzón temporal en Cloudflare con datos cifrados en el propio dispositivo y caducidad de 5 minutos; el PIN nunca sale del dispositivo. Cloudflare ve el paquete cifrado, el código y las IPs, como cualquier servidor web. El PIN de 6 dígitos protege el emparejamiento cómodo, pero no debe tratarse como una contraseña fuerte ni compartirse fuera del momento de conexión.
 
 ## Autoría
 
