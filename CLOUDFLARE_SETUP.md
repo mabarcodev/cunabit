@@ -65,14 +65,12 @@ Los Durable Objects y su migración `v1` no se deshacen al revertir código; sol
 
 ## Dirección antigua
 
-`cunabit.vercel.app` sigue existiendo como proyecto de Vercel, pero `vercel.json` solo redirige todo a la nueva dirección (redirección temporal 307, para poder cambiar el destino si algún día se usa un dominio propio).
-
-La base Upstash Redis y sus variables `KV_REST_API_*` del proyecto de Vercel ya no se usan y se pueden borrar desde `Storage` en Vercel.
+Hasta la 5.x CUNABIT estaba en Vercel (`cunabit.vercel.app`) con Upstash Redis. En la 6.0.0 se retiró por completo: el repositorio ya no tiene configuración de Vercel y el proyecto se elimina allí, así que esa dirección deja de funcionar.
 
 ## Dominio propio (opcional)
 
 `mabarcodev.com` ya está en Cloudflare. Para servir CUNABIT en un subdominio propio:
 
 1. Worker `cunabit` > `Dominios` > `Añadir dominio` > `cunabit.mabarcodev.com`. Cloudflare crea el DNS y el certificado.
-2. Cambia las URLs absolutas de `public/index.html`, `public/robots.txt` y `public/sitemap.xml`, y el destino de `vercel.json`.
+2. Cambia las URLs absolutas de `public/index.html`, `public/robots.txt` y `public/sitemap.xml`.
 3. Deja `workers_dev: true` o añade una redirección desde `workers.dev` para no romper enlaces guardados.

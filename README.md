@@ -12,7 +12,7 @@ CUNABIT es un monitor de bebé P2P para navegador. Usa dos dispositivos en la mi
 
 ## Uso
 
-1. Abre `https://cunabit.mabarcodev.workers.dev/` en los dos dispositivos. La dirección antigua `https://cunabit.vercel.app/` redirige a esta.
+1. Abre `https://cunabit.mabarcodev.workers.dev/` en los dos dispositivos.
 2. En el móvil que queda con el bebé, toca `Soy la cámara`.
 3. Crea un PIN de 6 dígitos y activa la cámara.
 4. En el otro móvil, toca `Soy el monitor`.
@@ -40,7 +40,6 @@ CUNABIT se publica como un Worker de Cloudflare:
 - `src/worker.mjs` atiende `/api/box`. Cada código de emparejamiento es un Durable Object (`PairingBox`) que guarda solo el paquete cifrado y los tokens efímeros, y lo borra con una alarma a los 5 minutos. `RateLimiter` limita a 120 peticiones por minuto e IP, en memoria.
 - `wrangler.jsonc` define el Worker, los Durable Objects y los logs. No hace falta ninguna variable de entorno ni base de datos externa.
 - Cada push a `main` se publica solo (Workers Builds conectado al repo de GitHub).
-- `vercel.json` solo redirige `cunabit.vercel.app` a la nueva dirección.
 
 Configuración, operación y qué hacer si algo falla: [CLOUDFLARE_SETUP.md](CLOUDFLARE_SETUP.md). Por qué se eligió esta arquitectura: [docs/adr/0001-cloudflare-durable-objects.md](docs/adr/0001-cloudflare-durable-objects.md).
 

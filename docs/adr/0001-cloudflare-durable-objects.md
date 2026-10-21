@@ -30,6 +30,6 @@ Publicar toda la app como un único Worker de Cloudflare:
 - Lecturas consistentes al instante: lo que escribe la cámara lo lee el monitor en la siguiente consulta.
 - Plan gratuito: 100.000 peticiones al día, de sobra para el uso actual.
 - Un solo proveedor ve los datos de emparejamiento (antes, Vercel y Upstash). Lo que ve no cambia: paquete cifrado, código e IPs. El PIN nunca sale del dispositivo.
-- La URL pasa de `cunabit.vercel.app` a `cunabit.mabarcodev.workers.dev`; Vercel queda solo como redirección temporal (307) por si en el futuro se usa un dominio propio.
+- La URL pasa de `cunabit.vercel.app` a `cunabit.mabarcodev.workers.dev`. El proyecto de Vercel se elimina sin redirección, así que los enlaces antiguos dejan de funcionar.
 - Para probar el Worker con `node --test` se sustituye `cloudflare:workers` por un stub mínimo (`test-support/`).
 - Límite conocido que no cambia con esta decisión: un PIN de 6 dígitos protege frente a terceros, pero quien opere el buzón podría probar todas las combinaciones contra el paquete cifrado durante los 5 minutos de vida.

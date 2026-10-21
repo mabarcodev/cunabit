@@ -49,7 +49,6 @@ for (const file of walk(root)) {
 }
 
 JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-JSON.parse(readFileSync(join(root, 'vercel.json'), 'utf8'));
 
 if (problems.length) {
   console.error(problems.join('\n'));

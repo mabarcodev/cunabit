@@ -4,7 +4,7 @@
 
 ### Cambiado
 
-- **CUNABIT se publica en Cloudflare**: nueva dirección `https://cunabit.mabarcodev.workers.dev/`. `cunabit.vercel.app` redirige a ella.
+- **CUNABIT se publica en Cloudflare**: nueva dirección `https://cunabit.mabarcodev.workers.dev/`. La anterior, `cunabit.vercel.app`, deja de funcionar.
 - El buzón de emparejamiento usa Cloudflare Durable Objects en vez de Upstash Redis. Ya no hay base de datos externa que pueda archivarse por inactividad, que fue la causa del `500 server_error` de octubre de 2026. Detalles en `docs/adr/0001-cloudflare-durable-objects.md`.
 - Cada código de emparejamiento se borra de verdad a los 5 minutos mediante una alarma, aunque nadie vuelva a consultarlo.
 - Los errores transitorios del almacén responden `503 store_unavailable` y la app muestra «el servicio de emparejamiento no está disponible»; antes era un `500` genérico.
@@ -16,7 +16,7 @@
 
 - `api/box.js`, la integración con Upstash/Vercel KV y sus variables de entorno.
 - Vercel Analytics. Las visitas se pueden consultar en las métricas del Worker.
-- `VERCEL_SETUP.md`, sustituido por `CLOUDFLARE_SETUP.md`.
+- El proyecto de Vercel y `vercel.json`. `VERCEL_SETUP.md` queda sustituido por `CLOUDFLARE_SETUP.md`.
 
 ### Audio y pantalla
 
