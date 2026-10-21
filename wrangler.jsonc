@@ -3,6 +3,8 @@
   "name": "cunabit",
   "main": "src/worker.mjs",
   "compatibility_date": "2026-10-01",
+  // URL de producción: cunabit.mabarcodev.workers.dev. Explícito para que ningún deploy la desactive.
+  "workers_dev": true,
   // Solo se publica public/: el resto del repo (tests, docs, scripts) nunca se sube como asset.
   "assets": {
     "directory": "./public",

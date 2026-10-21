@@ -1,6 +1,6 @@
 {
   "name": "cunabit",
-  "version": "5.2.0",
+  "version": "6.0.0",
   "private": true,
   "description": "CUNABIT, monitor de bebé P2P LAN primero para navegador",
   "scripts": {
